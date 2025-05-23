@@ -1,13 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hungry/models/core/recipe.dart';
-import 'package:hungry/models/helper/recipe_helper.dart';
+import 'package:hungry/services/api_service.dart';
 import 'package:hungry/views/utils/AppColor.dart';
 import 'package:hungry/views/widgets/recipe_tile.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class NewlyPostedPage extends StatelessWidget {
-  final TextEditingController searchInputController = TextEditingController();
-  final List<Recipe> newlyPostedRecipe = RecipeHelper.newlyPostedRecipe;
+class NewlyPostedPage extends StatefulWidget {
+  @override
+  _NewlyPostedPageState createState() => _NewlyPostedPageState();
+}
+
+class _NewlyPostedPageState extends State<NewlyPostedPage> {
+  List<Recipe> newlyPostedRecipe = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserIdAndRecipes();
+  }
+
+  Future<void> _loadUserIdAndRecipes() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getInt('user_id');
+    if (userId != null) {
+      final data = await ApiService.getRecomendacoes(userId);
+      final List<dynamic> lista = data['receitas'] ?? [];
+      setState(() {
+        newlyPostedRecipe = lista.map((e) => Recipe.fromJson(e)).toList();
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -21,7 +45,8 @@ class NewlyPostedPage extends StatelessWidget {
           onPressed: () {
             Navigator.of(context).pop();
           },
-        ), systemOverlayStyle: SystemUiOverlayStyle.light,
+        ),
+        systemOverlayStyle: SystemUiOverlayStyle.light,
       ),
       body: ListView.separated(
         padding: EdgeInsets.all(16),

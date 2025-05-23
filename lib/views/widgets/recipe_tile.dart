@@ -30,7 +30,12 @@ class RecipeTile extends StatelessWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(5),
                 color: Colors.blueGrey,
-                image: DecorationImage(image: AssetImage(data.photo), fit: BoxFit.cover),
+                image: DecorationImage(
+                  image: data.photo.startsWith('http')
+                      ? NetworkImage(data.photo)
+                      : AssetImage(data.photo) as ImageProvider,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
             // Recipe Info
@@ -48,6 +53,8 @@ class RecipeTile extends StatelessWidget {
                       child: Text(
                         data.title,
                         style: TextStyle(fontWeight: FontWeight.w600, fontFamily: 'inter'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     // Recipe Calories and Time
@@ -59,27 +66,17 @@ class RecipeTile extends StatelessWidget {
                           width: 12,
                           height: 12,
                         ),
-                        Container(
-                          margin: EdgeInsets.only(left: 5),
-                          child: Text(
-                            data.calories,
-                            style: TextStyle(fontSize: 12),
-                          ),
+                        SizedBox(width: 5),
+                        Text(
+                          '${data.calories} cal',
+                          style: TextStyle(fontSize: 12),
                         ),
-                        SizedBox(
-                          width: 10,
-                        ),
-                        Icon(
-                          Icons.alarm,
-                          size: 14,
-                          color: Colors.black,
-                        ),
-                        Container(
-                          margin: EdgeInsets.only(left: 5),
-                          child: Text(
-                            data.time,
-                            style: TextStyle(fontSize: 12),
-                          ),
+                        SizedBox(width: 10),
+                        Icon(Icons.alarm, size: 14, color: Colors.black),
+                        SizedBox(width: 5),
+                        Text(
+                          '${data.time} min',
+                          style: TextStyle(fontSize: 12),
                         ),
                       ],
                     ),

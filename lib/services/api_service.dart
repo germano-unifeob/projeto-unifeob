@@ -236,4 +236,50 @@
         return {};
       }
     }
+static Future<List<Map<String, dynamic>>> searchReceitas(String query) async {
+    final url = Uri.parse('$baseUrl/receitas/search?q=$query');
+    final response = await http.get(url);
+    if (response.statusCode == 200) {
+      try {
+        final result = jsonDecode(response.body);
+        if (result is List) {
+          return List<Map<String, dynamic>>.from(result);
+        } else {
+          return [];
+        }
+      } catch (e) {
+        print('Erro ao parse JSON em searchReceitas: $e');
+        return [];
+      }
+    } else {
+      print('Status ${response.statusCode} em searchReceitas');
+      return [];
+    }
   }
+  
+// Exemplo para buscar sugestões
+static Future<List<dynamic>> autocompleteReceitas(String termo) async {
+  final response = await http.get(Uri.parse('$baseUrl/receitas/autocomplete?q=$termo'));
+  if (response.statusCode == 200) {
+    return jsonDecode(response.body);
+  } else {
+    throw Exception('Erro ao buscar sugestões');
+  }
+}
+
+// Exemplo para receitas aleatórias
+static Future<List<dynamic>> getReceitasAleatorias() async {
+  final response = await http.get(Uri.parse('$baseUrl/receitas/random'));
+  if (response.statusCode == 200) {
+    return jsonDecode(response.body);
+  } else {
+    throw Exception('Erro ao buscar receitas aleatórias');
+  }
+}
+
+}
+
+
+
+
+  

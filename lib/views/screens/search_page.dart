@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:hungry/models/core/recipe.dart';
-import 'package:hungry/models/helper/recipe_helper.dart';
+import 'package:hungry/services/api_service.dart';
 import 'package:hungry/views/utils/AppColor.dart';
 import 'package:hungry/views/widgets/modals/search_filter_modal.dart';
 import 'package:hungry/views/widgets/recipe_tile.dart';
@@ -14,23 +15,58 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   TextEditingController searchInputController = TextEditingController();
-  final List<Recipe> searchResult = RecipeHelper.sarchResultRecipe;
+  List<Recipe> searchResult = [];
+
+  @override
+  void initState() {
+    super.initState();
+    carregarReceitasAleatorias();
+  }
+
+  Future<void> carregarReceitasAleatorias() async {
+    try {
+      final resultados = await ApiService.getReceitasAleatorias();
+      setState(() {
+        searchResult = resultados.map((e) => Recipe.fromJson(e)).toList();
+      });
+    } catch (e) {
+      print('Erro ao carregar receitas aleatórias: $e');
+    }
+  }
+
+  Future<void> buscarReceitas() async {
+    final termo = searchInputController.text.trim();
+    if (termo.isEmpty) return;
+
+    try {
+      final resultados = await ApiService.searchReceitas(termo);
+      setState(() {
+        searchResult = resultados.map((e) => Recipe.fromJson(e)).toList();
+      });
+    } catch (e) {
+      print('Erro ao buscar receitas: $e');
+      setState(() {
+        searchResult = [];
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    print(searchInputController.text.isEmpty);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppColor.primary,
         elevation: 0,
         centerTitle: true,
-        title: Text('Search Recipe', style: TextStyle(fontFamily: 'inter', fontWeight: FontWeight.w400, fontSize: 16)),
+        title: Text(
+          'Search Recipe',
+          style: TextStyle(fontFamily: 'inter', fontWeight: FontWeight.w400, fontSize: 16),
+        ),
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ), systemOverlayStyle: SystemUiOverlayStyle.light,
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        systemOverlayStyle: SystemUiOverlayStyle.light,
       ),
       body: ListView(
         shrinkWrap: true,
@@ -42,63 +78,63 @@ class _SearchPageState extends State<SearchPage> {
             height: 145,
             color: AppColor.primary,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Search Bar
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Search TextField
                       Expanded(
                         child: Container(
                           height: 50,
                           margin: EdgeInsets.only(right: 15),
-                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: AppColor.primarySoft),
-                          child: TextField(
-                            controller: searchInputController,
-                            onChanged: (value) {
-                              print(searchInputController.text);
-                              setState(() {});
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: AppColor.primarySoft,
+                          ),
+                          child: TypeAheadField(
+                            suggestionsCallback: (pattern) async {
+                              return await ApiService.autocompleteReceitas(pattern);
                             },
-                            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w400),
-                            maxLines: 1,
-                            textInputAction: TextInputAction.search,
-                            decoration: InputDecoration(
-                              hintText: 'What do you want to eat?',
-                              hintStyle: TextStyle(color: Colors.white.withOpacity(0.2)),
-                              prefixIconConstraints: BoxConstraints(maxHeight: 20),
-                              contentPadding: EdgeInsets.symmetric(horizontal: 17),
-                              focusedBorder: InputBorder.none,
-                              border: InputBorder.none,
-                              prefixIcon: Visibility(
-                                visible: (searchInputController.text.isEmpty) ? true : false,
-                                child: Container(
-                                  margin: EdgeInsets.only(left: 10, right: 12),
-                                  child: SvgPicture.asset(
-                                    'assets/icons/search.svg',
-                                    width: 20,
-                                    height: 20,
-                                    color: Colors.white,
-                                  ),
-                                ),
+                            itemBuilder: (context, suggestion) {
+                              final item = suggestion as Map<String, dynamic>;
+                              return ListTile(
+                                title: Text(item['name']),
+                              );
+                            },
+                            onSuggestionSelected: (suggestion) {
+                              final item = suggestion as Map<String, dynamic>;
+                              setState(() {
+                                searchResult = [Recipe.fromJson(item)];
+                              });
+                              searchInputController.text = item['title'] ?? '';
+                            },
+                            textFieldConfiguration: TextFieldConfiguration(
+                              controller: searchInputController,
+                              style: TextStyle(color: Colors.white, fontSize: 16),
+                              textInputAction: TextInputAction.search,
+                              onSubmitted: (_) => buscarReceitas(),
+                              decoration: InputDecoration(
+                                hintText: 'What do you want to eat?',
+                                hintStyle: TextStyle(color: Colors.white.withOpacity(0.2)),
+                                contentPadding: EdgeInsets.symmetric(horizontal: 17),
+                                border: InputBorder.none,
+                                prefixIcon: Icon(Icons.search, color: Colors.white.withOpacity(0.6)),
                               ),
                             ),
                           ),
                         ),
                       ),
-                      // Filter Button
                       GestureDetector(
                         onTap: () {
                           showModalBottomSheet(
-                              context: context,
-                              backgroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20))),
-                              builder: (context) {
-                                return SearchFilterModal();
-                              });
+                            context: context,
+                            backgroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                            ),
+                            builder: (_) => SearchFilterModal(),
+                          );
                         },
                         child: Container(
                           width: 50,
@@ -110,75 +146,26 @@ class _SearchPageState extends State<SearchPage> {
                           ),
                           child: SvgPicture.asset('assets/icons/filter.svg'),
                         ),
-                      )
+                      ),
                     ],
                   ),
                 ),
-                // Search Keyword Recommendation
-                Container(
-                  height: 60,
-                  margin: EdgeInsets.only(top: 8),
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    scrollDirection: Axis.horizontal,
-                    physics: BouncingScrollPhysics(),
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: popularRecipeKeyword.length,
-                    separatorBuilder: (context, index) {
-                      return SizedBox(width: 8);
-                    },
-                    itemBuilder: (context, index) {
-                      return Container(
-                        alignment: Alignment.topCenter,
-                        child: TextButton(
-                          onPressed: () {
-                            searchInputController.text = popularRecipeKeyword[index];
-                          },
-                          child: Text(
-                            popularRecipeKeyword[index],
-                            style: TextStyle(color: Colors.white.withOpacity(0.7), fontWeight: FontWeight.w400),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            side: BorderSide(color: Colors.white.withOpacity(0.15), width: 1),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                )
               ],
             ),
           ),
-          // Section 2 - Search Result
+
+          // Section 2 - Resultados
           Container(
             padding: EdgeInsets.all(16),
-            width: MediaQuery.of(context).size.width,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  margin: EdgeInsets.only(bottom: 15),
-                  child: Text(
-                    'This is the result of your search..',
-                    style: TextStyle(color: Colors.grey, fontSize: 12),
+            child: searchResult.isEmpty
+                ? Center(child: Text('Nenhuma receita encontrada'))
+                : ListView.separated(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: searchResult.length,
+                    separatorBuilder: (_, __) => SizedBox(height: 16),
+                    itemBuilder: (_, index) => RecipeTile(data: searchResult[index]),
                   ),
-                ),
-                ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: searchResult.length,
-                  physics: NeverScrollableScrollPhysics(),
-                  separatorBuilder: (context, index) {
-                    return SizedBox(height: 16);
-                  },
-                  itemBuilder: (context, index) {
-                    return RecipeTile(
-                      data: searchResult[index],
-                    );
-                  },
-                ),
-              ],
-            ),
           ),
         ],
       ),

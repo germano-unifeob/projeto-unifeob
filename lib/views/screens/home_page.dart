@@ -1,20 +1,19 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:hungry/models/core/recipe.dart';
-import 'package:hungry/models/helper/recipe_helper.dart';
 import 'package:hungry/views/screens/delicious_today_page.dart';
 import 'package:hungry/views/screens/new_recipe_page.dart';
-import 'package:hungry/views/screens/newly_posted_page.dart';
 import 'package:hungry/views/screens/profile_page.dart';
 import 'package:hungry/views/screens/search_page.dart';
 import 'package:hungry/views/utils/AppColor.dart';
 import 'package:hungry/views/widgets/custom_app_bar.dart';
 import 'package:hungry/views/widgets/dummy_search_bar.dart';
 import 'package:hungry/views/widgets/featured_recipe_card.dart';
-import 'package:hungry/views/widgets/recipe_tile.dart';
-import 'package:hungry/views/widgets/recommendation_recipe_card.dart';
 import 'package:hungry/views/widgets/new_recipe_card.dart';
-import 'package:hungry/services/api_service.dart';
+import 'package:hungry/views/widgets/recipe_tile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hungry/services/api_service.dart';
+import 'package:hungry/main.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -23,12 +22,9 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
-  List<Recipe> featuredRecipe = RecipeHelper.featuredRecipe;
-  List<Recipe> recommendationRecipe = RecipeHelper.recommendationRecipe;
-  List<Recipe> newlyPostedRecipe = RecipeHelper.newlyPostedRecipe;
-
+class _HomePageState extends State<HomePage> with RouteAware {
   List<Recipe> iaRecipes = [];
+  List<Recipe> viewedRecipes = [];
   int? userId;
 
   @override
@@ -36,17 +32,35 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _loadUserIdAndRecipes();
   }
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    _loadViewedRecipes(); // chamado ao voltar de uma receita
+  }
 
   Future<void> _loadUserIdAndRecipes() async {
     final prefs = await SharedPreferences.getInstance();
     userId = prefs.getInt('user_id');
     if (userId != null) {
       await _loadIaRecipes(userId!);
+      await _loadViewedRecipes();
     }
   }
 
   Future<void> _loadIaRecipes(int userId) async {
     try {
+      // Use seus dados reais aqui se necessário
       final data = await ApiService.getRecomendacoes(userId);
       final List<dynamic> lista = data['receitas'] ?? [];
       setState(() {
@@ -57,7 +71,17 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // Converte o Map recebido da API para seu modelo Recipe
+  Future<void> _loadViewedRecipes() async {
+    final prefs = await SharedPreferences.getInstance();
+    final List<String> salvas = prefs.getStringList('receitas_vistas') ?? [];
+    setState(() {
+      viewedRecipes = salvas.map((jsonString) {
+        final Map<String, dynamic> map = jsonDecode(jsonString);
+        return _recipeFromMap(map);
+      }).toList();
+    });
+  }
+
   Recipe _recipeFromMap(Map<String, dynamic> map) {
     final ingList = map['ingredients'];
     List<ingredient> ingredientes = [];
@@ -81,13 +105,18 @@ class _HomePageState extends State<HomePage> {
       title: map['name'] ?? map['title'] ?? '',
       photo: map['photo'] ?? '',
       calories: map['calories']?.toString() ?? map['calorias']?.toString() ?? '',
-      time: map['minutes']?.toString() ?? map['minutes']?.toString() ?? '',
+      time: map['minutes']?.toString() ?? '',
       description: map['description'] ?? '',
       ingredients: ingredientes,
+      ingredientsString: map['ingredients'] is String ? map['ingredients'] : null,
+      steps: map['steps']?.toString() ?? '',
       tutorial: [],
       reviews: [],
     );
   }
+
+
+
 
   Future<void> _goToNewRecipe(BuildContext context) async {
     if (userId == null) {
@@ -121,11 +150,9 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // Junta os cards das receitas IA com as mocadas (agora IA vem primeiro!)
     final List<Widget> allCards = [
       NewRecipeCard(onTap: () => _goToNewRecipe(context)),
       ...iaRecipes.map((recipe) => FeaturedRecipeCard(data: recipe)),
-      ...featuredRecipe.map((recipe) => FeaturedRecipeCard(data: recipe)),
     ];
 
     return Scaffold(
@@ -141,7 +168,6 @@ class _HomePageState extends State<HomePage> {
         shrinkWrap: true,
         physics: BouncingScrollPhysics(),
         children: [
-          // Section 1 - Featured Recipe - Wrapper
           Container(
             height: 350,
             color: Colors.white,
@@ -173,7 +199,7 @@ class _HomePageState extends State<HomePage> {
                             onPressed: () {
                               Navigator.of(context).push(MaterialPageRoute(builder: (context) => DeliciousTodayPage()));
                             },
-                            child: Text('see all'),
+                            child: Text('ver tudo'),
                             style: TextButton.styleFrom(foregroundColor: Colors.white, textStyle: TextStyle(fontWeight: FontWeight.w400, fontSize: 14)),
                           ),
                         ],
@@ -197,78 +223,39 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
           ),
-          // Section 2 - Recommendation Recipe (só mocado, ajuste se quiser misturar com IA)
-          Container(
-            margin: EdgeInsets.only(top: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  margin: EdgeInsets.only(bottom: 16),
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    'Today recomendation based on your taste...',
-                    style: TextStyle(color: Colors.grey),
+          if (viewedRecipes.isNotEmpty)
+            Container(
+              margin: EdgeInsets.only(top: 14),
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Visualizadas Recentemente',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, fontFamily: 'inter'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).push(MaterialPageRoute(builder: (context) => DeliciousTodayPage()));
+                        },
+                        child: Text('ver tudo'),
+                        style: TextButton.styleFrom(foregroundColor: Colors.black, textStyle: TextStyle(fontWeight: FontWeight.w400, fontSize: 14)),
+                      ),
+                    ],
                   ),
-                ),
-                Container(
-                  height: 174,
-                  child: ListView.separated(
+                  ListView.separated(
                     shrinkWrap: true,
-                    physics: BouncingScrollPhysics(),
-                    scrollDirection: Axis.horizontal,
-                    itemCount: recommendationRecipe.length,
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    separatorBuilder: (context, index) {
-                      return SizedBox(width: 16);
-                    },
-                    itemBuilder: (context, index) {
-                      final Recipe recipe = recommendationRecipe[index];
-                      return RecommendationRecipeCard(data: recipe);
-                    },
+                    itemCount: viewedRecipes.length,
+                    physics: NeverScrollableScrollPhysics(),
+                    separatorBuilder: (context, index) => SizedBox(height: 16),
+                    itemBuilder: (context, index) => RecipeTile(data: viewedRecipes[index]),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          // Section 3 - Newly Posted
-          Container(
-            margin: EdgeInsets.only(top: 14),
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Vistas Recentemente',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, fontFamily: 'inter'),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).push(MaterialPageRoute(builder: (context) => NewlyPostedPage()));
-                      },
-                      child: Text('see all'),
-                      style: TextButton.styleFrom(foregroundColor: Colors.black, textStyle: TextStyle(fontWeight: FontWeight.w400, fontSize: 14)),
-                    ),
-                  ],
-                ),
-                ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: newlyPostedRecipe.length,
-                  physics: NeverScrollableScrollPhysics(),
-                  separatorBuilder: (context, index) {
-                    return SizedBox(height: 16);
-                  },
-                  itemBuilder: (context, index) {
-                    final Recipe recipe = newlyPostedRecipe[index];
-                    return RecipeTile(data: recipe);
-                  },
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
