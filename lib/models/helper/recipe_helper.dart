@@ -1,5 +1,5 @@
 
-// import 'package:hungry/models/core/recipe.dart';
+// import 'package:smartchef/models/core/recipe.dart';
 
 // class RecipeHelper {
 //   static List<Recipe> featuredRecipe = featuredRecipeRawData

@@ -1,4 +1,4 @@
-package com.example.hungry
+package com.example.smartchef
 
 import io.flutter.embedding.android.FlutterActivity
 

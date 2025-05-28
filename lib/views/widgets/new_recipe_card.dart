@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hungry/views/utils/AppColor.dart';
+import 'package:smartchef/views/utils/AppColor.dart';
 
 class NewRecipeCard extends StatelessWidget {
   final VoidCallback onTap;

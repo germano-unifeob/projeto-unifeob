@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:hungry/views/utils/AppColor.dart';
+import 'package:smartchef/views/utils/AppColor.dart';
 
 class DummySearchBar extends StatelessWidget {
   final VoidCallback routeTo;
@@ -40,16 +40,6 @@ class DummySearchBar extends StatelessWidget {
               ),
             ),
             // Right side - filter button
-            Container(
-              width: 50,
-              height: 50,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                color: AppColor.secondary,
-              ),
-              child: SvgPicture.asset('assets/icons/filter.svg'),
-            )
           ],
         ),
       ),

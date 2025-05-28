@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:hungry/views/screens/bookmarks_page.dart';
-import 'package:hungry/views/screens/explore_page.dart';
-import 'package:hungry/views/screens/home_page.dart';
-import 'package:hungry/views/utils/AppColor.dart';
-import 'package:hungry/views/widgets/custom_bottom_navigation_bar.dart';
+import 'package:smartchef/views/screens/bookmarks_page.dart';
+import 'package:smartchef/views/screens/explore_page.dart';
+import 'package:smartchef/views/screens/home_page.dart';
+import 'package:smartchef/views/utils/AppColor.dart';
+import 'package:smartchef/views/widgets/custom_bottom_navigation_bar.dart';
 
 class PageSwitcher extends StatefulWidget {
   @override

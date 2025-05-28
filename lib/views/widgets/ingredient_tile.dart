@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hungry/models/core/recipe.dart';
+import 'package:smartchef/models/core/recipe.dart';
 
 class ingredientTile extends StatelessWidget {
   final ingredient data;

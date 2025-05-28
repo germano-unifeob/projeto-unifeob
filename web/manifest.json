@@ -1,6 +1,6 @@
 {
-    "name": "hungry",
-    "short_name": "hungry",
+    "name": "smartchef",
+    "short_name": "smartchef",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

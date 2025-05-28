@@ -9,6 +9,8 @@ class Recipe {
   final List<Review> reviews;
   final String? steps;
   final String? ingredientsString;
+  final int? difficulty_id;
+  final int? food_type_id;
 
   Recipe({
     required this.title,
@@ -21,67 +23,67 @@ class Recipe {
     required this.reviews,
     this.steps,
     this.ingredientsString,
+    this.difficulty_id,
+    this.food_type_id,
   });
 
   factory Recipe.fromJson(Map<String, dynamic> json) {
-  print('==== [Recipe.fromJson] JSON Recebido ====');
-  print(json);
+    print('==== [Recipe.fromJson] JSON Recebido ====');
+    print(json);
 
-  // Inicialização de variáveis
-  List<ingredient> parsedIngredients = [];
-  String? parsedIngredientsString;
+    List<ingredient> parsedIngredients = [];
+    String? parsedIngredientsString;
 
-  // Tratamento do campo 'ingredients' que pode vir como lista ou string
-  final ingredientsData = json['ingredients'];
-
-  if (ingredientsData != null) {
-    if (ingredientsData is List) {
-      print('===> Ingredientes como LISTA');
-      parsedIngredients = ingredientsData.map<ingredient>((item) {
-        if (item is Map<String, dynamic>) {
-          return ingredient.fromJson(item);
-        } else {
-          return ingredient(name: item.toString(), size: "");
-        }
-      }).toList();
-    } else if (ingredientsData is String) {
-      print('===> Ingredientes como STRING');
-      parsedIngredientsString = ingredientsData;
-      parsedIngredients = ingredientsData
-          .split(';')
-          .map((item) {
-            print('Parsed ingrediente: ${item.trim()}');
-            return ingredient(name: item.trim(), size: "");
-          })
-          .where((i) => i.name.isNotEmpty)
-          .toList();
-    } else {
-      print('===> Formato desconhecido de ingredientes');
+    final ingredientsData = json['ingredients'];
+    if (ingredientsData != null) {
+      if (ingredientsData is List) {
+        print('===> Ingredientes como LISTA');
+        parsedIngredients = ingredientsData.map<ingredient>((item) {
+          if (item is Map<String, dynamic>) {
+            return ingredient.fromJson(item);
+          } else {
+            return ingredient(name: item.toString(), size: "");
+          }
+        }).toList();
+      } else if (ingredientsData is String) {
+        print('===> Ingredientes como STRING');
+        parsedIngredientsString = ingredientsData;
+        parsedIngredients = ingredientsData
+            .split(';')
+            .map((item) {
+              print('Parsed ingrediente: ${item.trim()}');
+              return ingredient(name: item.trim(), size: "");
+            })
+            .where((i) => i.name.isNotEmpty)
+            .toList();
+      } else {
+        print('===> Formato desconhecido de ingredientes');
+      }
     }
-  }
 
-  // Tratamento do campo 'steps'
-  String? parsedSteps;
-  if (json['steps'] != null && json['steps'].toString().trim().isNotEmpty) {
-    parsedSteps = json['steps'].toString();
-    print('===> Steps recebidos: ${parsedSteps.substring(0, parsedSteps.length.clamp(0, 50))}...');
-  } else {
-    print('===> Steps ausentes ou vazios');
-  }
+    String? parsedSteps;
+    if (json['steps'] != null && json['steps'].toString().trim().isNotEmpty) {
+      parsedSteps = json['steps'].toString();
+      print('===> Steps recebidos: ${parsedSteps.substring(0, parsedSteps.length.clamp(0, 50))}...');
+    } else {
+      print('===> Steps ausentes ou vazios');
+    }
 
-  return Recipe(
-    title: json['name']?.toString() ?? 'Sem título',
-    photo: json['photo']?.toString() ?? '',
-    calories: json['calories']?.toString() ?? '0',
-    time: json['minutes']?.toString() ?? '0',
-    description: json['description']?.toString() ?? '',
-    ingredients: parsedIngredients,
-    ingredientsString: parsedIngredientsString,
-    steps: parsedSteps,
-    tutorial: [],  // Pode ser preenchido depois
-    reviews: [],   // Pode ser preenchido depois
-  );
-}
+    return Recipe(
+      title: json['name']?.toString() ?? 'Sem título',
+      photo: json['photo']?.toString() ?? '',
+      calories: json['calories']?.toString() ?? '0',
+      time: json['minutes']?.toString() ?? '0',
+      description: json['description']?.toString() ?? '',
+      ingredients: parsedIngredients,
+      ingredientsString: parsedIngredientsString,
+      steps: parsedSteps,
+      tutorial: [],
+      reviews: [],
+      difficulty_id: json['difficulty_id'] as int?,
+      food_type_id: json['food_type_id'] as int?,
+    );
+  }
 
   Recipe copyWith({
     String? title,
@@ -94,6 +96,8 @@ class Recipe {
     List<Review>? reviews,
     String? steps,
     String? ingredientsString,
+    int? difficulty_id,
+    int? food_type_id,
   }) {
     return Recipe(
       title: title ?? this.title,
@@ -106,20 +110,23 @@ class Recipe {
       reviews: reviews ?? this.reviews,
       steps: steps ?? this.steps,
       ingredientsString: ingredientsString ?? this.ingredientsString,
+      difficulty_id: difficulty_id ?? this.difficulty_id,
+      food_type_id: food_type_id ?? this.food_type_id,
     );
   }
 
+  int get difficultyId => difficulty_id ?? 0;
+  int get foodTypeId => food_type_id ?? 0;
+  int get preparationMinutes => int.tryParse(time) ?? 0;
+
   @override
-String toString() {
-  return 'Recipe(title: $title, '
-         'ingredients: ${ingredients.length} itens, '
-         'ingredientsString: ${ingredientsString?.substring(0, 30) ?? 'null'}, '
-         'steps: ${steps?.substring(0, 30) ?? 'null'})';
+  String toString() {
+    return 'Recipe(title: $title, '
+        'ingredients: ${ingredients.length} itens, '
+        'ingredientsString: ${ingredientsString?.substring(0, 30) ?? 'null'}, '
+        'steps: ${steps?.substring(0, 30) ?? 'null'})';
+  }
 }
-}
-
-
-// -------------------------------------------------
 
 class ingredient {
   final String name;
@@ -160,8 +167,6 @@ class ingredient {
   }
 }
 
-// -------------------------------------------------
-
 class TutorialStep {
   final String step;
   final String description;
@@ -192,8 +197,6 @@ class TutorialStep {
         .toList();
   }
 }
-
-// -------------------------------------------------
 
 class Review {
   final String username;

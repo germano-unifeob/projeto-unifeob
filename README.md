@@ -1,88 +1,96 @@
-# Hungry.
+# 🍽️ SmartChef - Recomendador Inteligente de Receitas
 
-## Introduction
+O **SmartChef** é um aplicativo mobile desenvolvido em Flutter que recomenda receitas com base nos ingredientes disponíveis, preferências alimentares, alergias e nível de experiência culinária. A recomendação é feita por uma IA integrada via API (Node.js), com dados armazenados em um banco de dados MySQL.
 
-Hungry is a Free Flutter Recipe App Starter Template that can help you develop a Recipe application much faster. You just need to add some adjustment to the frontend and you can create your own backend.
+---
 
-## App Screenshot
-<img src="https://github.com/mrezkys/hungry/blob/main/demo/banner.jpg" width="auto" height="auto" >
-<img src="https://github.com/mrezkys/hungry/blob/main/demo/shot.jpg" width="auto" height="auto" >
-<img src="https://github.com/mrezkys/hungry/blob/main/demo/details.jpg" width="auto" height="auto" >
-
-## Whats inside
-- Welcome Page
-- Bookmarks Page
-- Delicious Today Page
-- Explore Page
-- Full Screen Image Page
-- Home Page
-- Newly Posted Page
-- Page Switcher
-- Profile Page
-- Recipe Detail Page
-- Search Page
---------
-- Login Modal
-- Register Modal
-- Search Filter Modal
---------
-- Category Card Widget
-- Custom App Bar Widget
-- Custom Bottom Navigation Bar Widget
-- Custom Text Field Widget
-- Dummy Search Bar Widget
-- Featured Redipe Card Widget
-- Popular Recipe Card Widget
-- Recommendation Recipe Card Widget
-- Recipe Tile Widget
-- Review Tile Widget
-- Step Tile Widget
-- User Info Tile Widget
-- ingredient Tile Widget
-
-
-## Installation
-
-**Step 1:**
-
-Download or clone this repo by using the link below:
+## 📁 Estrutura do Projeto
 
 ```
-https://github.com/mrezkys/hungry.git
+smartchef/
+├── frontend/         # App Flutter
+├── api/              # Backend Node.js (Express)
+├── database/         # Dump do banco de dados MySQL
+│   └── receitas_db.sql
+├── README.md
+└── .gitignore
 ```
 
-**Step 2:**
+---
 
-Go to project root and execute the following command in console to get the required dependencies: 
+## 🚀 Como rodar o projeto
 
-```
-flutter pub get 
-```
+### 📱 1. Rodar o App Flutter
 
-**Step 3:**
+> Pré-requisitos: Flutter SDK instalado
 
-You can run this project by using this command
-
-```
+```bash
+cd frontend
+flutter pub get
 flutter run
 ```
 
+📝 **Dica**: emuladores Android usam `http://10.0.2.2` para acessar `localhost`. Atualize as chamadas de API no app, se necessário.
 
-## About the Author
+---
 
-Hungry is Developed by [mrezkys](https://www.facebook.com/mrezkys12)
-The User Interface are designed by [mrezkys](https://dribbble.com/mrezkys)
+### 🔌 2. Rodar a API Node.js
 
-## Thanks To
-Iconly, icons that i used on this project, created by [Piqo Design](https://www.figma.com/@piqodesign)
+> Pré-requisitos: Node.js e npm instalados
 
-## License
-Hungry is under MIT License.
+```bash
+cd api
+npm install
+npm start
+```
 
-## Donate
-You can support me at [trakteer](https://trakteer.id/mrezkys) <br>
-<a href="https://trakteer.id/mrezkys" target="_blank"><img id="wse-buttons-preview" src="https://cdn.trakteer.id/images/embed/trbtn-red-5.png" height="45" style="border: 0px; height: 45px;" alt="Trakteer Saya"></a>
+A API estará disponível em `http://localhost:3000`
 
-## Announcement
+---
 
-Now Hungry already relased v1.0.0
+### 🗄️ 3. Configurar o Banco de Dados
+
+> Pré-requisitos: MySQL instalado e em execução
+
+1. Crie o banco:
+
+```sql
+CREATE DATABASE receitas_db;
+```
+
+2. Importe o dump:
+
+```bash
+mysql -u root -p receitas_db < database/receitas_db.sql
+```
+
+3. Configure o acesso ao banco no backend (ex: `.env`):
+
+```env
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=sua_senha
+DB_NAME=receitas_db
+```
+
+---
+
+## 🧪 Tecnologias Utilizadas
+
+- **Flutter** (Dart) – App mobile
+- **Node.js + Express** – API backend
+- **MySQL** – Banco de dados relacional
+- **SharedPreferences** – Armazenamento local
+- **Twilio API** – Envio de token SMS (para recuperação de senha)
+
+---
+
+## 👨‍💻 Autor
+
+- Germano Antônio Zani Jorge ([GitHub](https://github.com/germano-unifeob))
+
+---
+
+## 📄 Licença
+
+Este projeto está licenciado sob a **MIT License**. Veja o arquivo `LICENSE` para mais detalhes.

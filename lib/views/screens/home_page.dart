@@ -1,19 +1,20 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:hungry/models/core/recipe.dart';
-import 'package:hungry/views/screens/delicious_today_page.dart';
-import 'package:hungry/views/screens/new_recipe_page.dart';
-import 'package:hungry/views/screens/profile_page.dart';
-import 'package:hungry/views/screens/search_page.dart';
-import 'package:hungry/views/utils/AppColor.dart';
-import 'package:hungry/views/widgets/custom_app_bar.dart';
-import 'package:hungry/views/widgets/dummy_search_bar.dart';
-import 'package:hungry/views/widgets/featured_recipe_card.dart';
-import 'package:hungry/views/widgets/new_recipe_card.dart';
-import 'package:hungry/views/widgets/recipe_tile.dart';
+import 'package:smartchef/models/core/recipe.dart';
+import 'package:smartchef/views/screens/suas_receitas_page.dart';
+import 'package:smartchef/views/screens/new_recipe_page.dart';
+import 'package:smartchef/views/screens/profile_page.dart';
+import 'package:smartchef/views/screens/search_page.dart';
+import 'package:smartchef/views/utils/AppColor.dart';
+import 'package:smartchef/views/widgets/custom_app_bar.dart';
+import 'package:smartchef/views/widgets/dummy_search_bar.dart';
+import 'package:smartchef/views/widgets/featured_recipe_card.dart';
+import 'package:smartchef/views/widgets/new_recipe_card.dart';
+import 'package:smartchef/views/widgets/recipe_tile.dart';
+import 'package:smartchef/views/widgets/recommendation_recipe_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:hungry/services/api_service.dart';
-import 'package:hungry/main.dart';
+import 'package:smartchef/services/api_service.dart';
+import 'package:smartchef/main.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -27,11 +28,65 @@ class _HomePageState extends State<HomePage> with RouteAware {
   List<Recipe> viewedRecipes = [];
   int? userId;
 
+  final Recipe recomendacaoDoDia = Recipe(
+    title: 'Frango com Curry',
+    photo: 'assets/images/frango.jpg',
+    calories: '420',
+    time: '30',
+    description: 'Frango cremoso ao molho de curry, servido com arroz.',
+    ingredients: [],
+    ingredientsString: 'Frango, Curry, Creme de leite, Arroz',
+    steps: 'Refogue, adicione curry e creme de leite, sirva com arroz.',
+    tutorial: [],
+    reviews: [],
+  );
+
+  final List<Recipe> receitasMocadas = [
+    Recipe(
+      title: 'Torrada com Abacate e Ovo Pochê',
+      photo: 'assets/images/list1.jpg',
+      calories: '280',
+      time: '15',
+      description: 'Torrada com abacate, vegetais verdes e ovo pochê.',
+      ingredients: [],
+      ingredientsString: 'Pão, Abacate, Ovo, Espinafre, Pimenta calabresa',
+      steps: 'Amasse o abacate, refogue os verdes, cozinhe o ovo e monte tudo na torrada.',
+      tutorial: [],
+      reviews: [],
+    ),
+    Recipe(
+      title: 'Cordeiro ao Molho de Vinho',
+      photo: 'assets/images/list5.jpg',
+      calories: '610',
+      time: '50',
+      description: 'Cordeiro suculento com batata gratinada, couve e linguiça ao molho demi-glace.',
+      ingredients: [],
+      ingredientsString: 'Cordeiro, Batata, Couve, Linguiça, Vinho tinto, Manteiga, Alho',
+      steps: 'Asse o cordeiro ao ponto, grelhe a linguiça e monte com batata e couve. Regue com molho de vinho.',
+      tutorial: [],
+      reviews: [],
+    ),
+  ];
+
+  final Recipe receitaCarrosselMocada = Recipe(
+    title: 'Hambúrguer Artesanal',
+    photo: 'assets/images/hamburguer.jpg', // substitua pela nova imagem
+    calories: '750',
+    time: '25',
+    description: 'Pão brioche, carne suculenta, queijo, alface e tomate.',
+    ingredients: [],
+    steps: 'Grelhe a carne, monte o lanche e sirva quente.',
+    ingredientsString: 'Pão, Carne moída, Queijo, Tomate, Alface',
+    tutorial: [],
+    reviews: [],
+  );
+
   @override
   void initState() {
     super.initState();
     _loadUserIdAndRecipes();
   }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -46,7 +101,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
 
   @override
   void didPopNext() {
-    _loadViewedRecipes(); // chamado ao voltar de uma receita
+    _loadViewedRecipes();
   }
 
   Future<void> _loadUserIdAndRecipes() async {
@@ -60,7 +115,6 @@ class _HomePageState extends State<HomePage> with RouteAware {
 
   Future<void> _loadIaRecipes(int userId) async {
     try {
-      // Use seus dados reais aqui se necessário
       final data = await ApiService.getRecomendacoes(userId);
       final List<dynamic> lista = data['receitas'] ?? [];
       setState(() {
@@ -115,9 +169,6 @@ class _HomePageState extends State<HomePage> with RouteAware {
     );
   }
 
-
-
-
   Future<void> _goToNewRecipe(BuildContext context) async {
     if (userId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -152,14 +203,15 @@ class _HomePageState extends State<HomePage> with RouteAware {
   Widget build(BuildContext context) {
     final List<Widget> allCards = [
       NewRecipeCard(onTap: () => _goToNewRecipe(context)),
+      FeaturedRecipeCard(data: receitaCarrosselMocada),
       ...iaRecipes.map((recipe) => FeaturedRecipeCard(data: recipe)),
     ];
 
     return Scaffold(
       appBar: CustomAppBar(
-        title: Text('SmartChef', style: TextStyle(fontFamily: 'inter', fontWeight: FontWeight.w700)),
+        title: Text('SmartChef', style: TextStyle(color: Colors.white,fontFamily: 'inter', fontWeight: FontWeight.w700)),
         showProfilePhoto: true,
-        profilePhoto: AssetImage('assets/images/pp.png'),
+        profilePhoto: AssetImage('assets/images/profile.jpg'),
         profilePhotoOnPressed: () {
           Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProfilePage()));
         },
@@ -197,10 +249,23 @@ class _HomePageState extends State<HomePage> with RouteAware {
                           ),
                           TextButton(
                             onPressed: () {
-                              Navigator.of(context).push(MaterialPageRoute(builder: (context) => DeliciousTodayPage()));
+                              if (userId != null) {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => SuasReceitasPage(userId: userId!),
+                                  ),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Erro: Usuário não identificado. Faça login novamente.')),
+                                );
+                              }
                             },
                             child: Text('ver tudo'),
-                            style: TextButton.styleFrom(foregroundColor: Colors.white, textStyle: TextStyle(fontWeight: FontWeight.w400, fontSize: 14)),
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              textStyle: TextStyle(fontWeight: FontWeight.w400, fontSize: 14),
+                            ),
                           ),
                         ],
                       ),
@@ -223,39 +288,63 @@ class _HomePageState extends State<HomePage> with RouteAware {
               ],
             ),
           ),
-          if (viewedRecipes.isNotEmpty)
-            Container(
-              margin: EdgeInsets.only(top: 14),
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Visualizadas Recentemente',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, fontFamily: 'inter'),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).push(MaterialPageRoute(builder: (context) => DeliciousTodayPage()));
-                        },
-                        child: Text('ver tudo'),
-                        style: TextButton.styleFrom(foregroundColor: Colors.black, textStyle: TextStyle(fontWeight: FontWeight.w400, fontSize: 14)),
-                      ),
-                    ],
+
+          // Bloco mocado de recomendação
+          Container(
+            margin: EdgeInsets.only(top: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  margin: EdgeInsets.only(bottom: 16),
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    'Recomendação de hoje baseada no seu estilo...',
+                    style: TextStyle(color: Colors.grey, fontSize: 14),
                   ),
-                  ListView.separated(
+                ),
+                Container(
+                  height: 174,
+                  child: ListView.separated(
                     shrinkWrap: true,
-                    itemCount: viewedRecipes.length,
-                    physics: NeverScrollableScrollPhysics(),
-                    separatorBuilder: (context, index) => SizedBox(height: 16),
-                    itemBuilder: (context, index) => RecipeTile(data: viewedRecipes[index]),
+                    physics: BouncingScrollPhysics(),
+                    scrollDirection: Axis.horizontal,
+                    itemCount: 1,
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    separatorBuilder: (context, index) => SizedBox(width: 16),
+                    itemBuilder: (context, index) {
+                      return RecommendationRecipeCard(data: recomendacaoDoDia);
+                    },
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
+          ),
+
+          // Visualizadas recentemente (mocado se vazio)
+          Container(
+            margin: EdgeInsets.only(top: 14),
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Visualizadas Recentemente',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, fontFamily: 'inter'),
+                ),
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: viewedRecipes.isNotEmpty ? viewedRecipes.length : receitasMocadas.length,
+                  separatorBuilder: (context, index) => SizedBox(height: 16),
+                  itemBuilder: (context, index) {
+                    final recipe = viewedRecipes.isNotEmpty ? viewedRecipes[index] : receitasMocadas[index];
+                    return RecipeTile(data: recipe);
+                  },
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:hungry/models/core/recipe.dart';
-import 'package:hungry/services/api_service.dart';
-import 'package:hungry/views/utils/AppColor.dart';
-import 'package:hungry/views/widgets/recipe_tile.dart';
+import 'package:smartchef/models/core/recipe.dart';
+import 'package:smartchef/services/api_service.dart';
+import 'package:smartchef/views/utils/AppColor.dart';
+import 'package:smartchef/views/widgets/recipe_tile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class NewlyPostedPage extends StatefulWidget {

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:intl/intl.dart';
-import 'package:hungry/views/utils/AppColor.dart';
-import 'package:hungry/services/api_service.dart';
+import 'package:smartchef/views/utils/AppColor.dart';
+import 'package:smartchef/services/api_service.dart';
 
 class NewRecipePage extends StatefulWidget {
   final int userId;
@@ -143,19 +143,33 @@ class _NewRecipePageState extends State<NewRecipePage> {
     }
     // Exibe o loading dialog
     showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => Center(
+  context: context,
+  barrierDismissible: false,
+  builder: (context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             CircularProgressIndicator(color: AppColor.primary),
-            SizedBox(height: 14),
-            Text("Buscando Receitas...", style: TextStyle(color: AppColor.primary, fontWeight: FontWeight.bold)),
+            SizedBox(height: 18),
+            Text(
+              'Buscando receitas...',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'inter',
+                color: AppColor.primary,
+              ),
+            ),
           ],
         ),
       ),
     );
+  },
+);
     try {
       await ApiService.recomendarReceitasComIngredientes(
         userId: widget.userId,
@@ -193,7 +207,7 @@ class _NewRecipePageState extends State<NewRecipePage> {
             backgroundColor: Colors.transparent,
             elevation: 0,
             centerTitle: true,
-            title: Text('Nova Receita', style: TextStyle(fontFamily: 'inter', fontWeight: FontWeight.w700, fontSize: 18)),
+            title: Text('Nova Receita', style: TextStyle(color: Colors.white, fontFamily: 'inter', fontWeight: FontWeight.w700, fontSize: 18)),
             leading: IconButton(
               icon: Icon(Icons.arrow_back_ios, color: Colors.white),
               onPressed: () => Navigator.of(context).pop(),

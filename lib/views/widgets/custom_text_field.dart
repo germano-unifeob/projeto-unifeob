@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hungry/views/utils/AppColor.dart';
+import 'package:smartchef/views/utils/AppColor.dart';
 
 class CustomTextField extends StatelessWidget {
   final String title;
@@ -8,6 +8,10 @@ class CustomTextField extends StatelessWidget {
   final bool obscureText;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
+  final String? Function(String?)? validator;
+  final void Function(String)? onChanged;
+  final TextInputType? keyboardType;
+  final String? errorText;
 
   const CustomTextField({
     Key? key,
@@ -17,6 +21,10 @@ class CustomTextField extends StatelessWidget {
     this.obscureText = false,
     this.padding,
     this.margin,
+    this.validator,
+    this.onChanged,
+    this.keyboardType,
+    this.errorText,
   }) : super(key: key);
 
   @override
@@ -25,7 +33,6 @@ class CustomTextField extends StatelessWidget {
       padding: padding ?? EdgeInsets.zero,
       margin: margin ?? EdgeInsets.zero,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
@@ -42,17 +49,25 @@ class CustomTextField extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColor.primaryExtraSoft,
               borderRadius: BorderRadius.circular(10),
+              border: errorText != null
+                  ? Border.all(color: Colors.redAccent)
+                  : null,
             ),
-            child: TextField(
+            child: TextFormField(
               controller: controller,
-              style: const TextStyle(fontSize: 14),
+              style: const TextStyle( fontSize: 14),
               cursorColor: AppColor.primary,
               obscureText: obscureText,
+              keyboardType: keyboardType,
+              validator: validator,
+              onChanged: onChanged,
               decoration: InputDecoration(
                 hintText: hint,
                 hintStyle: TextStyle(fontSize: 14, color: Colors.grey[400]),
                 contentPadding: const EdgeInsets.only(left: 16),
                 border: InputBorder.none,
+                errorText: errorText,
+                errorStyle:TextStyle(color: Colors.redAccent, fontSize: 12)
               ),
             ),
           ),

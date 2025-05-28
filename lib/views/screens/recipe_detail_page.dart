@@ -1,13 +1,13 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:hungry/models/core/recipe.dart';
-import 'package:hungry/views/screens/full_screen_image.dart';
-import 'package:hungry/views/utils/AppColor.dart';
-import 'package:hungry/views/widgets/ingredient_tile.dart';
-import 'package:hungry/views/widgets/step_tile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
+import 'package:smartchef/models/core/recipe.dart';
+import 'package:smartchef/views/screens/full_screen_image.dart';
+import 'package:smartchef/views/utils/AppColor.dart';
+import 'package:smartchef/views/widgets/ingredient_tile.dart';
+import 'package:smartchef/views/widgets/step_tile.dart';
 
 class RecipeDetailPage extends StatefulWidget {
   final Recipe data;
@@ -20,6 +20,7 @@ class RecipeDetailPage extends StatefulWidget {
 class _RecipeDetailPageState extends State<RecipeDetailPage> with TickerProviderStateMixin {
   late TabController _tabController;
   late ScrollController _scrollController;
+  bool isFavorited = false;
 
   @override
   void initState() {
@@ -29,20 +30,72 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> with TickerProvider
     _scrollController.addListener(() {
       changeAppBarColor(_scrollController);
     });
+    _verificarFavorito();
     _salvarReceitaVisualizada(widget.data);
   }
+
+  Future<void> _verificarFavorito() async {
+    final prefs = await SharedPreferences.getInstance();
+    final favoritos = prefs.getStringList('receitas_favoritas') ?? [];
+    setState(() {
+      isFavorited = favoritos.any((jsonStr) {
+        final map = jsonDecode(jsonStr);
+        return map['title'] == widget.data.title;
+      });
+    });
+  }
+
+  Future<void> _alternarFavorito() async {
+  final prefs = await SharedPreferences.getInstance();
+  final favoritos = prefs.getStringList('receitas_favoritas') ?? [];
+
+  // Remove se já estiver salvo
+  favoritos.removeWhere((jsonStr) {
+    final map = jsonDecode(jsonStr);
+    return map['title'] == widget.data.title;
+  });
+
+  String mensagem;
+
+  if (!isFavorited) {
+    favoritos.insert(0, jsonEncode({
+      'title': widget.data.title,
+      'photo': widget.data.photo,
+      'calories': widget.data.calories,
+      'minutes': widget.data.time,
+      'description': widget.data.description,
+      'ingredients': widget.data.ingredientsString ?? widget.data.ingredients.map((e) => e.name).join('; '),
+      'steps': widget.data.steps ?? widget.data.tutorial.map((e) => e.description).join('; '),
+    }));
+    mensagem = 'Item salvo nos seus favoritos!';
+  } else {
+    mensagem = 'Item removido dos seus favoritos.';
+  }
+
+  await prefs.setStringList('receitas_favoritas', favoritos);
+
+  setState(() {
+    isFavorited = !isFavorited;
+  });
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(mensagem),
+      duration: Duration(seconds: 2),
+      backgroundColor: AppColor.primary,
+    ),
+  );
+}
 
   Future<void> _salvarReceitaVisualizada(Recipe recipe) async {
     final prefs = await SharedPreferences.getInstance();
     final listaJson = prefs.getStringList('receitas_vistas') ?? [];
 
-    // Remove duplicatas pelo título
     listaJson.removeWhere((jsonStr) {
       final map = jsonDecode(jsonStr);
       return map['title'] == recipe.title;
     });
 
-    // Adiciona nova no início
     listaJson.insert(0, jsonEncode({
       'title': recipe.title,
       'photo': recipe.photo,
@@ -53,9 +106,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> with TickerProvider
       'steps': recipe.steps ?? recipe.tutorial.map((e) => e.description).join('; '),
     }));
 
-    // Mantém só as 5 mais recentes
     if (listaJson.length > 5) listaJson.removeRange(5, listaJson.length);
-
     await prefs.setStringList('receitas_vistas', listaJson);
   }
 
@@ -98,13 +149,19 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> with TickerProvider
             backgroundColor: Colors.transparent,
             elevation: 0,
             centerTitle: true,
-            title: Text('Detalhe da Receita', style: TextStyle(fontFamily: 'inter', fontWeight: FontWeight.w400, fontSize: 16)),
+            title: Text('Detalhe da Receita', style: TextStyle(fontFamily: 'inter', fontWeight: FontWeight.w700)),
             leading: IconButton(
               icon: Icon(Icons.arrow_back_ios, color: Colors.white),
               onPressed: () => Navigator.of(context).pop(),
             ),
             actions: [
-              IconButton(onPressed: () {}, icon: SvgPicture.asset('assets/icons/bookmark.svg', color: Colors.white)),
+              IconButton(
+                onPressed: _alternarFavorito,
+                icon: SvgPicture.asset(
+                  isFavorited ? 'assets/icons/bookmark-filled.svg' : 'assets/icons/bookmark.svg',
+                  color: Colors.white,
+                ),
+              ),
             ],
             systemOverlayStyle: SystemUiOverlayStyle.light,
           ),
@@ -143,8 +200,6 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> with TickerProvider
               ),
               child: Container(
                 decoration: BoxDecoration(gradient: AppColor.linearBlackTop),
-                height: 280,
-                width: MediaQuery.of(context).size.width,
               ),
             ),
           ),

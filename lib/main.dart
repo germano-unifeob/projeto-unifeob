@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:hungry/views/screens/auth/welcome_page.dart';
-import 'package:hungry/views/screens/page_switcher.dart'; // ✅ use PageSwitcher
+import 'package:smartchef/views/screens/auth/welcome_page.dart';
+import 'package:smartchef/views/screens/page_switcher.dart'; // ✅ use PageSwitcher
 
 final RouteObserver<ModalRoute<void>> routeObserver = RouteObserver<ModalRoute<void>>();
 void main() async {

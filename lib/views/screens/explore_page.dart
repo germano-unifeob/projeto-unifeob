@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:hungry/models/core/recipe.dart';
-import 'package:hungry/views/screens/search_page.dart';
-import 'package:hungry/views/utils/AppColor.dart';
-import 'package:hungry/views/widgets/category_card.dart';
-import 'package:hungry/views/widgets/popular_recipe_card.dart';
-import 'package:hungry/views/widgets/recommendation_recipe_card.dart';
+import 'package:smartchef/models/core/recipe.dart';
+import 'package:smartchef/views/screens/search_by_estilo_page.dart';
+import 'package:smartchef/views/screens/search_page.dart';
+import 'package:smartchef/views/utils/AppColor.dart';
+import 'package:smartchef/views/widgets/popular_recipe_card.dart';
+import 'package:smartchef/views/widgets/recommendation_recipe_card.dart';
+import 'package:smartchef/views/widgets/custom_app_bar.dart';
+import 'package:smartchef/views/screens/page_switcher.dart';
 
 class ExplorePage extends StatefulWidget {
   @override
@@ -23,18 +25,17 @@ class _ExplorePageState extends State<ExplorePage> {
     carregarReceitas();
   }
 
-  void carregarReceitas() async {
-    // TODO: Substituir com chamada à IA ou API
+  void carregarReceitas() {
     setState(() {
       popularRecipe = Recipe(
-        title: 'Torta de Morango',
-        photo: '',
-        calories: '380',
-        time: '35',
-        description: 'Uma torta doce com cobertura de morango fresco.',
+        title: 'Macarrão à Bolonhesa', // ✅ novo título
+        photo: 'assets/images/macarrao-bolonhesa.jpg', // ✅ imagem nova, se tiver
+        calories: '530',
+        time: '40',
+        description: 'Macarrão com molho bolonhesa tradicional e parmesão.',
         ingredients: [],
-        ingredientsString: 'morango; leite condensado; manteiga; bolacha',
-        steps: 'Triture as bolachas e misture com manteiga; Forre a forma e adicione o creme; Decore com morangos',
+        ingredientsString: 'macarrão; carne moída; molho de tomate; alho; cebola; parmesão',
+        steps: 'Cozinhe o macarrão; Prepare o molho com carne; Misture tudo e sirva com queijo.',
         tutorial: [],
         reviews: [],
       );
@@ -42,7 +43,7 @@ class _ExplorePageState extends State<ExplorePage> {
       sweetFoodRecommendationRecipe = [
         Recipe(
           title: 'Bolo de Chocolate',
-          photo: '',
+          photo: 'assets/images/bolo-chocolate.jpg',
           calories: '450',
           time: '45',
           description: 'Bolo fofo com cobertura cremosa de chocolate.',
@@ -56,50 +57,102 @@ class _ExplorePageState extends State<ExplorePage> {
     });
   }
 
+  void _abrirBuscaPorEstilo(int estiloVidaId) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => SearchByEstiloPage(estiloVidaId: estiloVidaId),
+      ),
+    );
+  }
+
+  Widget _estiloCard(String title, String imagePath, int estiloVidaId) {
+    return GestureDetector(
+      onTap: () => _abrirBuscaPorEstilo(estiloVidaId),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          width: (MediaQuery.of(context).size.width - 48) / 2,
+          height: 110,
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage(imagePath),
+              fit: BoxFit.cover,
+            ),
+          ),
+          alignment: Alignment.bottomLeft,
+          padding: EdgeInsets.all(12),
+          child: Text(
+            title,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              shadows: [
+                Shadow(
+                  color: Colors.black.withOpacity(0.6),
+                  blurRadius: 6,
+                  offset: Offset(1, 1),
+                )
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: AppColor.primary,
-        elevation: 0,
-        centerTitle: false,
-        title: Text('Explore Recipe', style: TextStyle(fontFamily: 'inter', fontWeight: FontWeight.w400, fontSize: 16)),
-        automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.of(context).push(MaterialPageRoute(builder: (context) => SearchPage()));
-            },
-            icon: SvgPicture.asset('assets/icons/search.svg', color: Colors.white),
-          ),
-        ],
-        systemOverlayStyle: SystemUiOverlayStyle.light,
+   return Scaffold(
+  appBar: CustomAppBar(
+    title: Text(
+      'Explorar Receitas',
+      style: TextStyle(fontFamily: 'inter', fontWeight: FontWeight.w700, color: Colors.white),
+    ),
+    showProfilePhoto: false,
+    leading: IconButton(
+      icon: Icon(Icons.arrow_back_ios_new, color: Colors.white),
+      onPressed: () {
+  if (Navigator.of(context).canPop()) {
+    Navigator.of(context).pop();
+  } else {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => PageSwitcher()),
+    );
+  }
+},
+    ),
+    actions: [
+      IconButton(
+        onPressed: () {
+          Navigator.of(context).push(MaterialPageRoute(builder: (_) => SearchPage()));
+        },
+        icon: SvgPicture.asset('assets/icons/search.svg', color: Colors.white),
       ),
+    ],
+  ),
       body: ListView(
         shrinkWrap: true,
         physics: BouncingScrollPhysics(),
         children: [
-          // Section 1 - Categorias
+          // Categorias
           Container(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             width: MediaQuery.of(context).size.width,
-            height: 245,
             color: AppColor.primary,
             child: Wrap(
               spacing: 16,
               runSpacing: 16,
               children: [
-                CategoryCard(title: 'Healthy', image: AssetImage('assets/images/healthy.jpg')),
-                CategoryCard(title: 'Drink', image: AssetImage('assets/images/drink.jpg')),
-                CategoryCard(title: 'Seafood', image: AssetImage('assets/images/seafood.jpg')),
-                CategoryCard(title: 'Desert', image: AssetImage('assets/images/desert.jpg')),
-                CategoryCard(title: 'Spicy', image: AssetImage('assets/images/spicy.jpg')),
-                CategoryCard(title: 'Meat', image: AssetImage('assets/images/meat.jpg')),
+                _estiloCard('Saudável', 'assets/images/healthy.jpg', 2),
+                _estiloCard('Vegetariano', 'assets/images/vegetarian.png', 1),
+                _estiloCard('Sobremesas', 'assets/images/desert.jpg', 3),
+                _estiloCard('Sobremesas Veg.', 'assets/images/vegetarian-dessert.png', 4),
               ],
             ),
           ),
 
-          // Section 2 - Receita Popular
+          // Receita Popular
           if (popularRecipe != null)
             Container(
               width: MediaQuery.of(context).size.width,
@@ -107,22 +160,20 @@ class _ExplorePageState extends State<ExplorePage> {
               child: PopularRecipeCard(data: popularRecipe!),
             ),
 
-          // Section 3 - Recomendações doces
+          // Recomendações
           if (sweetFoodRecommendationRecipe.isNotEmpty)
             Container(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Header
                   Container(
                     margin: EdgeInsets.only(bottom: 16),
                     padding: EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
-                      'Todays sweet food to make your day happy ......',
+                      'Hoje é dia de adoçar o dia com essas delícias...',
                       style: TextStyle(color: Colors.grey),
                     ),
                   ),
-                  // Lista horizontal
                   Container(
                     height: 174,
                     child: ListView.separated(
