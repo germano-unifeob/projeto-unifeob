@@ -90,7 +90,7 @@ class _SearchByEstiloPageState extends State<SearchByEstiloPage> {
     switch (widget.estiloVidaId) {
       case 1:
         return 'Receitas Vegetarianas';
-      case 2:
+      case 0:
         return 'Receitas Saudáveis';
       case 3:
         return 'Sobremesas';

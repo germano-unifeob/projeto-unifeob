@@ -5,7 +5,7 @@ import '/models/core/recipe.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  static const baseUrl = "https://apiprojetosmartchef-production.up.railway.app";
+  static const baseUrl = "https://apiprojetosmartchef-production.up.railway.app/";
 
   static Future<http.Response> registerUser(Map<String, dynamic> data) {
     return http.post(
@@ -366,8 +366,8 @@ class ApiService {
   }
 
 static Future<List<Map<String, dynamic>>> getReceitasComFiltros({
-  int? difficultyId, // será enviado como nivel_experiencia_id
-  int? foodTypeId,   // será enviado como estilo_vida_id
+  int? difficultyId,
+  int? foodTypeId,
   int? minMinutes,
   int? maxMinutes,
   int page = 1,
@@ -379,7 +379,16 @@ static Future<List<Map<String, dynamic>>> getReceitasComFiltros({
   };
 
   if (difficultyId != null) queryParams['nivel_experiencia_id'] = difficultyId.toString();
-  if (foodTypeId != null) queryParams['estilo_vida_id'] = foodTypeId.toString();
+
+  if (foodTypeId != null) {
+    queryParams['estilo_vida_id'] = foodTypeId.toString();
+
+    // 🥗 Adiciona o filtro de calorias se for o estilo "Fit"
+    if (foodTypeId == 0) {
+      queryParams['maxCalories'] = '300';
+    }
+  }
+
   if (minMinutes != null) queryParams['minMinutes'] = minMinutes.toString();
   if (maxMinutes != null) queryParams['maxMinutes'] = maxMinutes.toString();
 
@@ -392,6 +401,7 @@ static Future<List<Map<String, dynamic>>> getReceitasComFiltros({
     throw Exception('Erro ao buscar receitas com filtros');
   }
 }
+
 
 static Future<List<dynamic>> getReceitasCarnes({
   required int page,
