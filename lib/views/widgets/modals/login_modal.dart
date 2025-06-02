@@ -21,57 +21,58 @@ class _LoginModalState extends State<LoginModal> {
   String? erroMensagem;
 
   void _login() async {
+  setState(() {
+    erroMensagem = null;
+  });
+
+  if (_emailController.text.trim().isEmpty || _senhaController.text.isEmpty) {
     setState(() {
-      erroMensagem = null;
+      erroMensagem = 'Preencha todos os campos';
     });
+    return;
+  }
 
-    if (_emailController.text.trim().isEmpty || _senhaController.text.isEmpty) {
-      setState(() {
-        erroMensagem = 'Preencha todos os campos';
-      });
-      return;
-    }
+  setState(() => _loading = true);
 
-    setState(() => _loading = true);
+  final api = ApiService(); // ✅ agora usando instância
+  final response = await api.login({
+    'email': _emailController.text,
+    'senha': _senhaController.text,
+  });
 
-    final response = await ApiService.login({
-      'email': _emailController.text,
-      'senha': _senhaController.text,
-    });
+  setState(() => _loading = false);
 
-    setState(() => _loading = false);
+  if (response.statusCode == 200) {
+    final prefs = await SharedPreferences.getInstance();
+    final responseData = jsonDecode(response.body);
 
-    if (response.statusCode == 200) {
-      final prefs = await SharedPreferences.getInstance();
-      final responseData = jsonDecode(response.body);
+    final token = responseData['token'];
+    final userId = responseData['user_id'];
 
-      final token = responseData['token'];
-      final userId = responseData['user_id'];
+    await prefs.setString('auth_token', token);
+    await prefs.setInt('user_id', userId);
 
-      await prefs.setString('auth_token', token);
-      await prefs.setInt('user_id', userId);
+    Navigator.of(context).pop();
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => PageSwitcher()),
+    );
+  } else {
+    try {
+      final body = jsonDecode(response.body);
+      final msg = body['message']?.toString().toLowerCase();
 
-      Navigator.of(context).pop();
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => PageSwitcher()),
-      );
-    } else {
-      try {
-        final body = jsonDecode(response.body);
-        final msg = body['message']?.toString().toLowerCase();
-
-        if (response.statusCode == 404) {
-          setState(() => erroMensagem = 'Usuário não encontrado. Você já tem uma conta?');
-        } else if (msg != null && msg.contains('senha')) {
-          setState(() => erroMensagem = 'Senha inválida');
-        } else {
-          setState(() => erroMensagem = null);
-        }
-      } catch (_) {
+      if (response.statusCode == 404) {
+        setState(() => erroMensagem = 'Usuário não encontrado. Você já tem uma conta?');
+      } else if (msg != null && msg.contains('senha')) {
+        setState(() => erroMensagem = 'Senha inválida');
+      } else {
         setState(() => erroMensagem = null);
       }
+    } catch (_) {
+      setState(() => erroMensagem = null);
     }
   }
+}
 
   @override
   Widget build(BuildContext context) {

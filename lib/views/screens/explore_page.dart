@@ -144,10 +144,10 @@ class _ExplorePageState extends State<ExplorePage> {
               spacing: 16,
               runSpacing: 16,
               children: [
-                _estiloCard('Saudável', 'assets/images/healthy.jpg', 2),
+                _estiloCard('Fit', 'assets/images/healthy.jpg', 2),
                 _estiloCard('Vegetariano', 'assets/images/vegetarian.png', 1),
                 _estiloCard('Sobremesas', 'assets/images/desert.jpg', 3),
-                _estiloCard('Sobremesas Veg.', 'assets/images/vegetarian-dessert.png', 4),
+                _estiloCard('Carnes', 'assets/images/carnes.jpg', 4),
               ],
             ),
           ),

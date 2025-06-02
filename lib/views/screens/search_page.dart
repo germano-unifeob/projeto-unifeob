@@ -66,7 +66,7 @@ class _SearchPageState extends State<SearchPage> {
       else if (filtro == 'Avançado') _difficultyId = 2;
       else if (filtro == 'Normal') _foodTypeId = 2;
       else if (filtro == 'Vegetariano') _foodTypeId = 1;
-      else if (filtro == 'Saudável') _foodTypeId = 0;
+      else if (filtro == 'Fit') _foodTypeId = 0;
       else if (filtro == 'Até 30 minutos') _maxMinutes = 30;
       else if (filtro == '30 a 60 minutos') {
         _minMinutes = 31;

@@ -5,7 +5,7 @@ import '/models/core/recipe.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  static const baseUrl = "http://localhost:3307";
+  static const baseUrl = "https://apiprojetosmartchef-production.up.railway.app";
 
   static Future<http.Response> registerUser(Map<String, dynamic> data) {
     return http.post(
@@ -15,13 +15,25 @@ class ApiService {
     );
   }
 
-  static Future<http.Response> login(Map<String, dynamic> data) {
-    return http.post(
-      Uri.parse('$baseUrl/login'),
+  Future<http.Response> login(Map<String, dynamic> data) async {
+  final url = Uri.parse('$baseUrl/login');
+  print('🔍 Tentando login em: $url');
+  print('📦 Dados enviados: $data');
+
+  try {
+    final response = await http.post(
+      url,
       headers: {"Content-Type": "application/json"},
       body: jsonEncode(data),
     );
+    print('✅ Resposta status: ${response.statusCode}');
+    print('📨 Corpo da resposta: ${response.body}');
+    return response;
+  } catch (e) {
+    print('❌ Erro ao tentar login: $e');
+    rethrow;
   }
+}
 
   static Future<http.Response> sendRecoveryToken(Map<String, dynamic> data) {
     return http.post(
@@ -56,27 +68,29 @@ class ApiService {
     }
   }
 
-  static Future<void> cadastrarIngrediente({
-    required int userId,
-    required String nomeIngrediente,
-    required String validade,
-  }) async {
-    final url = Uri.parse('$baseUrl/ingredientes');
-    final body = jsonEncode({
-      'user_id': userId,
-      'ingredient_name': nomeIngrediente,
-      'expiration_date': validade,
-    });
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: body,
-    );
-    if (response.statusCode != 201) {
-      print('Erro ao cadastrar ingrediente: ${response.statusCode} ${response.body}');
-      throw Exception('Erro ao cadastrar ingrediente');
-    }
+  Future<void> cadastrarIngrediente({
+  required int userId,
+  required String nomeIngrediente,
+  required String validade,
+}) async {
+  final url = Uri.parse('$baseUrl/ingredientes');
+  final body = jsonEncode({
+    'user_id': userId,
+    'ingredient_name': nomeIngrediente,
+    'expiration_date': validade,
+  });
+
+  final response = await http.post(
+    url,
+    headers: {'Content-Type': 'application/json'},
+    body: body,
+  );
+
+  if (response.statusCode != 201) {
+    print('Erro ao cadastrar ingrediente: ${response.statusCode} ${response.body}');
+    throw Exception('Erro ao cadastrar ingrediente');
   }
+}
 
   static Future<List<Map<String, dynamic>>> buscarIngredientesPorPrefixo(String prefixo) async {
     final url = Uri.parse('$baseUrl/ingredientes?q=$prefixo');
@@ -119,32 +133,32 @@ class ApiService {
     );
   }
 
-  static Future<List<Map<String, dynamic>>> recomendarReceitasComIngredientes({
-    required int userId,
-    required List<Map<String, dynamic>> ingredientes,
-  }) async {
-    final url = Uri.parse('$baseUrl/ia/recomendar-receitas');
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'user_id': userId,
-        'ingredients': ingredientes,
-      }),
-    );
-    if (response.statusCode == 200) {
-      try {
-        final jsonData = jsonDecode(response.body);
-        return List<Map<String, dynamic>>.from(jsonData['receitas']);
-      } catch (e) {
-        print('Erro ao parse JSON em recomendarReceitas: $e');
-        return [];
-      }
-    } else {
-      print('Status ${response.statusCode} em recomendarReceitas');
+ Future<List<Map<String, dynamic>>> recomendarReceitasComIngredientes({
+  required int userId,
+  required List<Map<String, dynamic>> ingredientes,
+}) async {
+  final url = Uri.parse('$baseUrl/ia/recomendar-receitas');
+  final response = await http.post(
+    url,
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({
+      'user_id': userId,
+      'ingredients': ingredientes,
+    }),
+  );
+  if (response.statusCode == 200) {
+    try {
+      final jsonData = jsonDecode(response.body);
+      return List<Map<String, dynamic>>.from(jsonData['receitas']);
+    } catch (e) {
+      print('Erro ao parse JSON em recomendarReceitas: $e');
       return [];
     }
+  } else {
+    print('Status ${response.statusCode} em recomendarReceitas');
+    return [];
   }
+}
 
   static Future<List<Map<String, dynamic>>> getEstilosVida() async {
     final url = Uri.parse('$baseUrl/estilos-vida');
@@ -379,6 +393,18 @@ static Future<List<Map<String, dynamic>>> getReceitasComFiltros({
   }
 }
 
+static Future<List<dynamic>> getReceitasCarnes({
+  required int page,
+  int pageSize = 10,
+}) async {
+  final response = await http.get(Uri.parse('$baseUrl/receitas/carnes?page=$page&pageSize=$pageSize'));
+
+  if (response.statusCode == 200) {
+    return jsonDecode(response.body);
+  } else {
+    throw Exception('Erro ao carregar receitas com carnes');
+  }
+}
 
 
 }

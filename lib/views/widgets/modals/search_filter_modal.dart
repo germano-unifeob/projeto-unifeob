@@ -20,7 +20,7 @@ class _SearchFilterModalState extends State<SearchFilterModal> {
     'Avançado',
     'Normal',
     'Vegetariano',
-    'Saudável',
+    'Fit',
     'Até 30 minutos',
     '30 a 60 minutos',
     'Mais de 1 hora',

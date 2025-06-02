@@ -5,6 +5,7 @@ import 'package:smartchef/views/widgets/recipe_tile.dart';
 import 'package:smartchef/services/api_service.dart';
 import 'package:smartchef/views/utils/AppColor.dart';
 import 'package:smartchef/views/widgets/modals/search_filter_modal.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class SearchByEstiloPage extends StatefulWidget {
   final int estiloVidaId;
@@ -30,28 +31,40 @@ class _SearchByEstiloPageState extends State<SearchByEstiloPage> {
   }
 
   Future<void> _fetchPage(int pageKey) async {
-    try {
+  try {
+    List<Recipe> receitas;
+
+    if (widget.estiloVidaId == 4) {
+      // Carnes → chamada específica
+      final data = await ApiService.getReceitasCarnes(
+        page: pageKey,
+        pageSize: _pageSize,
+      );
+      receitas = data.map<Recipe>((json) => Recipe.fromJson(json)).toList();
+    } else {
+      // Estilos normais → chamada com filtros
       final data = await ApiService.getReceitasComFiltros(
         page: pageKey,
         pageSize: _pageSize,
-        foodTypeId: widget.estiloVidaId, // já fixo
+        foodTypeId: widget.estiloVidaId,
         difficultyId: _difficultyId,
         minMinutes: _minMinutes,
         maxMinutes: _maxMinutes,
       );
-
-      final receitas = data.map<Recipe>((json) => Recipe.fromJson(json)).toList();
-      final isLastPage = receitas.length < _pageSize;
-
-      if (isLastPage) {
-        _pagingController.appendLastPage(receitas);
-      } else {
-        _pagingController.appendPage(receitas, pageKey + 1);
-      }
-    } catch (e) {
-      _pagingController.error = e;
+      receitas = data.map<Recipe>((json) => Recipe.fromJson(json)).toList();
     }
+
+    final isLastPage = receitas.length < _pageSize;
+
+    if (isLastPage) {
+      _pagingController.appendLastPage(receitas);
+    } else {
+      _pagingController.appendPage(receitas, pageKey + 1);
+    }
+  } catch (e) {
+    _pagingController.error = e;
   }
+}
 
   void _atualizarFiltro(String filtro) {
     setState(() {
@@ -82,7 +95,7 @@ class _SearchByEstiloPageState extends State<SearchByEstiloPage> {
       case 3:
         return 'Sobremesas';
       case 4:
-        return 'Sobremesas Veganas';
+        return 'Carnes';
       default:
         return 'Receitas';
     }
@@ -99,27 +112,44 @@ class _SearchByEstiloPageState extends State<SearchByEstiloPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppColor.primary,
-        title: Text(getTituloEstilo(), style: TextStyle(fontFamily: 'inter', fontWeight: FontWeight.w700)),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.filter_list),
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                backgroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                ),
-                builder: (context) => SearchFilterModal(
-                  selectedFilter: _currentFilter,
-                  onFilterSelected: (String filtro) {
-                    _atualizarFiltro(filtro);
-                  },
-                ),
-              );
+        title: Text(getTituloEstilo(), style: TextStyle(color: Colors.white, fontFamily: 'inter', fontWeight: FontWeight.w700)),
+        actions: widget.estiloVidaId == 4 ? [] : [
+  Padding(
+    padding: const EdgeInsets.only(right: 16),
+    child: GestureDetector(
+      onTap: () {
+        showModalBottomSheet(
+          context: context,
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          builder: (_) => SearchFilterModal(
+            selectedFilter: _currentFilter,
+            onFilterSelected: (String filtro) {
+              _atualizarFiltro(filtro);
             },
           ),
-        ],
+        );
+      },
+      child: Container(
+        width: 40,
+        height: 40,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          color: AppColor.secondary,
+        ),
+        child: SvgPicture.asset(
+          'assets/icons/filter.svg',
+          width: 18,
+          height: 18,
+          color: Colors.black,
+        ),
+      ),
+    ),
+  ),
+],
       ),
       body: PagedListView<int, Recipe>(
         pagingController: _pagingController,

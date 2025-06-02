@@ -62,7 +62,7 @@ class _BookmarksPageState extends State<BookmarksPage> {
       return receitas.where((r) => r.foodTypeId == 1).toList();
     } else if (_currentFilter == 'Vegetariano') {
       return receitas.where((r) => r.foodTypeId == 2).toList();
-    } else if (_currentFilter == 'Saudável') {
+    } else if (_currentFilter == 'Fit') {
       return receitas.where((r) => r.foodTypeId == 3).toList();
     } else if (_currentFilter == 'Até 30 minutos') {
       return receitas.where((r) => r.preparationMinutes <= 30).toList();

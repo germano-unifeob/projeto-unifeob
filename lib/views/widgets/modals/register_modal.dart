@@ -6,6 +6,8 @@ import 'package:smartchef/views/widgets/custom_text_field.dart';
 import 'package:smartchef/views/widgets/modals/login_modal.dart';
 import '/services/api_service.dart';
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class RegisterModal extends StatefulWidget {
   @override
@@ -307,11 +309,15 @@ class _RegisterModalState extends State<RegisterModal> {
                           final responseData = json.decode(response.body);
                           
                           if (response.statusCode == 201) {
-                            mostrarSucesso('Cadastro realizado com sucesso!');
-                            Navigator.of(context).pop();
-                            Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(builder: (_) => PageSwitcher()),
-                            );
+                          final userId = responseData['user_id'];
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.setInt('user_id', userId);
+
+                          mostrarSucesso('Cadastro realizado com sucesso!');
+                          Navigator.of(context).pop();
+                          Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(builder: (_) => PageSwitcher()),
+                          );
                           } else {
                             mostrarErro(responseData['message'] ?? 'Erro ao realizar cadastro');
                           }

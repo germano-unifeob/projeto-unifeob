@@ -170,16 +170,18 @@ class _NewRecipePageState extends State<NewRecipePage> {
     );
   },
 );
-    try {
-      await ApiService.recomendarReceitasComIngredientes(
-        userId: widget.userId,
-        ingredientes: _ingredientes
-            .map((ing) => {
-                  'ingredient_id': ing['ingredient_id'],
-                  'expiration_date': ing['expiration_date'],
-                })
-            .toList(),
-      );
+    final api = ApiService(); // ✅ criar instância
+
+try {
+  await api.recomendarReceitasComIngredientes(
+    userId: widget.userId,
+    ingredientes: _ingredientes
+        .map((ing) => {
+              'ingredient_id': ing['ingredient_id'],
+              'expiration_date': ing['expiration_date'],
+            })
+        .toList(),
+  );
 
       if (mounted) Navigator.pop(context); // Fecha o loading
 

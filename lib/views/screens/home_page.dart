@@ -15,6 +15,7 @@ import 'package:smartchef/views/widgets/recommendation_recipe_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smartchef/services/api_service.dart';
 import 'package:smartchef/main.dart';
+import 'package:smartchef/views/utils/pixabay_helper.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -114,27 +115,96 @@ class _HomePageState extends State<HomePage> with RouteAware {
   }
 
   Future<void> _loadIaRecipes(int userId) async {
-    try {
-      final data = await ApiService.getRecomendacoes(userId);
-      final List<dynamic> lista = data['receitas'] ?? [];
-      setState(() {
-        iaRecipes = lista.map((e) => _recipeFromMap(e)).toList();
-      });
-    } catch (e) {
-      setState(() => iaRecipes = []);
+  try {
+    final data = await ApiService.getRecomendacoes(userId);
+    final List<dynamic> lista = data['receitas'] ?? [];
+
+    List<Recipe> receitasComImagem = [];
+
+    for (var e in lista) {
+      final recipe = _recipeFromMap(e);
+
+      if (recipe.photo.isEmpty) {
+        final image = await buscarImagemPixabay(recipe.title);
+        receitasComImagem.add(Recipe(
+          title: recipe.title,
+          photo: image ?? '', // usa imagem da API ou vazio
+          calories: recipe.calories,
+          time: recipe.time,
+          description: recipe.description,
+          ingredients: recipe.ingredients,
+          ingredientsString: recipe.ingredientsString,
+          steps: recipe.steps,
+          tutorial: recipe.tutorial,
+          reviews: recipe.reviews,
+        ));
+      } else {
+        receitasComImagem.add(recipe);
+      }
     }
+
+    setState(() {
+      iaRecipes = receitasComImagem;
+    });
+  } catch (e) {
+    setState(() => iaRecipes = []);
   }
+}
 
   Future<void> _loadViewedRecipes() async {
-    final prefs = await SharedPreferences.getInstance();
-    final List<String> salvas = prefs.getStringList('receitas_vistas') ?? [];
+  final prefs = await SharedPreferences.getInstance();
+  final List<String> salvas = prefs.getStringList('receitas_vistas') ?? [];
+
+  // Se não há receitas visualizadas, usa as mocadas com suas imagens locais
+  if (salvas.isEmpty) {
     setState(() {
-      viewedRecipes = salvas.map((jsonString) {
-        final Map<String, dynamic> map = jsonDecode(jsonString);
-        return _recipeFromMap(map);
-      }).toList();
+      viewedRecipes = [
+        Recipe(
+          title: 'Torrada com Abacate e Ovo Pochê',
+          photo: 'assets/images/list1.jpg', // IMAGEM LOCAL GARANTIDA
+          calories: '280',
+          time: '15',
+          description: 'Torrada com abacate, vegetais verdes e ovo pochê.',
+          ingredients: [],
+          ingredientsString: 'Pão, Abacate, Ovo, Espinafre, Pimenta calabresa',
+          steps: 'Amasse o abacate, refogue os verdes, cozinhe o ovo e monte tudo na torrada.',
+          tutorial: [],
+          reviews: [],
+        ),
+        Recipe(
+          title: 'Cordeiro ao Molho de Vinho',
+          photo: 'assets/images/list5.jpg', // IMAGEM LOCAL GARANTIDA
+          calories: '610',
+          time: '50',
+          description: 'Cordeiro suculento com batata gratinada, couve e linguiça ao molho demi-glace.',
+          ingredients: [],
+          ingredientsString: 'Cordeiro, Batata, Couve, Linguiça, Vinho tinto, Manteiga, Alho',
+          steps: 'Asse o cordeiro ao ponto, grelhe a linguiça e monte com batata e couve. Regue com molho de vinho.',
+          tutorial: [],
+          reviews: [],
+        )
+      ];
     });
+    return;
   }
+
+  // Para receitas salvas, busca no Pixabay apenas se necessário
+  final List<Recipe> carregadas = await Future.wait(salvas.map((jsonString) async {
+    final Map<String, dynamic> map = jsonDecode(jsonString);
+    final recipe = _recipeFromMap(map);
+
+    if (recipe.photo.isEmpty) {
+      final image = await buscarImagemPixabay(recipe.title);
+      return recipe.copyWith(photo: image ?? '');
+    }
+
+    return recipe;
+  }));
+
+  setState(() {
+    viewedRecipes = carregadas;
+  });
+}
 
   Recipe _recipeFromMap(Map<String, dynamic> map) {
     final ingList = map['ingredients'];
